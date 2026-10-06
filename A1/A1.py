@@ -98,8 +98,11 @@ print(f"pixel ({r}, {c}): RGB = {photo[r, c].tolist()}, label = {labels[r, c]}")
 # and the same reshape on labels gives you each patch's share of vineyard pixels.
 
 
-# STEP 2 (A1.pdf): the three candidate data points; print m and d for each
+# TODO: STEP 2 (A1.pdf): the three candidate data points; print m and d for each
 #         (a) one pixel:    m = H * W, d = 3   ->  photo.reshape(-1, 3)
+
+print(f"     ")
+print(f"    (a) one pixel: ")
 
 # Expected values, copied from A1.pdf for a check 
 M_EXPECTED = 42_467_328
@@ -108,21 +111,20 @@ D_EXPECTED = 3
 X = photo.reshape(-1, 3)  
 m_a, d_a = X.shape
 dm, dd = m_a - M_EXPECTED, d_a - D_EXPECTED
-print(f"     ")
-print(f"    (a) one pixel: ")
 print(f"    expected:   m = {M_EXPECTED:,}   d = {D_EXPECTED}")
 print(f"    difference: m {dm:+,}   d {dd:+}   -> {'OK' if dm == 0 and dd == 0 else 'NOT OK'}")
 print(f"    m = {m_a:,}   d = {d_a:}   ")
 
-
-
 #         (b) one patch:    P = 32; cut the grid, compute a few features per patch
+print(f"     ")
+print(f"    (b) one patch: ")
 
 P = 32                                   # patch size in pixels (25 m on the ground)
 C = photo.shape[-1]                      # number of colour channels (3 for RGB)
 
 n_rows = H // P                          # patches vertically
 n_cols = W // P                          # patches horizontally
+print(f"    patches vertically (n_rows) = {n_rows}  patches horizontally (n_cols) = {n_cols:}   ")
 
 cropped = photo[:n_rows * P, :n_cols * P]            # shape (n_rows*P, n_cols*P, C)
 
@@ -140,14 +142,28 @@ means = patches.mean(axis=1)                         # (n_patches, C)
 stds  = patches.std(axis=1)                          # (n_patches, C)
 
 # Step: glue features side by side -> data matrix
+#X_b = patches.mean(axis=1)        #features per patch = mean of each colour channel      (n_patches, C)
 X_b = np.hstack([means, stds])                       # (n_patches, 2*C)
-
 m_b, d_b = X_b.shape
-print(f"     ")
-print(f"    (b) one patch: ")
 print(f"    m = {m_b:,}   d = {d_b}")
 
+
+## CHECKS:
+# check if I got the same amount of pixels as in (a) (patches x pixels per patch = m from (a))
+total = m_b * P * P
+print(f"    patch check_1: {m_b:,} x {P*P:,} = {total:,}   "
+      f"-> {'NO PIXELS GOT LOSS' if total == M_EXPECTED else 'I LOST SOME PIXELS'}")
+
+# check if both H & W are divisible without a remainder
+rest_H, rest_W = H % P, W % P
+lost = H * W - (H - rest_H) * (W - rest_W)
+status = "OK" if rest_H == 0 and rest_W == 0 else "NOT OK"
+print(f"    patch check_2: H / P = {rest_H}   W / P = {rest_W}   lost pixels = {lost:,}   -> {status}")
+
 #         (c) whole image:  m = 1
+
+print(f"     ")
+print(f"    (c) whole image: ")
 C = photo.shape[-1]                      # number of colour channels (3 for RGB)
 
 # Step 1: count all values in the image
@@ -161,9 +177,9 @@ X_c = row.reshape(1, n_values)           # shape (1, H*W*C)
 
 m_c, d_c = X_c.shape                     # m = 1, d = H*W*C
 
-print(f"     ")
-print(f"    (c) whole image: ")
 print(f"    m = {m_c:,}   d = {d_c:,}")
+
+
 # STEP 3: the labels. A pixel's label is labels[row, column]. For every patch, the
 #         share of its pixels with value 1; the patch is vineyard if the share exceeds
 #         a threshold. Print the share of vineyard patches for > 25 %, > 50 %, > 75 %.
