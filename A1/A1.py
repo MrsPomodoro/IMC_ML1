@@ -97,6 +97,25 @@ print(f"pixel ({r}, {c}): RGB = {photo[r, c].tolist()}, label = {labels[r, c]}")
 #   grid.mean(axis=(1, 3))  -> one mean colour per patch, shape (144, 288, 3)
 # and the same reshape on labels gives you each patch's share of vineyard pixels.
 
+#TODO: In A1.py: three candidate data points, all three computed. (a) One pixel: its feature vector is its three colour values, so m = 42,467,328 and d = 3.
+
+# (a) one pixel = one data point
+# Expected values, copied from A1.pdf for a check 
+M_EXPECTED = 42_467_328
+D_EXPECTED = 3
+
+pixels = []
+for r in range(H):
+    for c in range(W):
+        pixels.append(photo[r, c])
+m = len(pixels)
+d = len(pixels[0])
+
+dm, dd = m - M_EXPECTED, d - D_EXPECTED
+print(f"    expected:   m = {M_EXPECTED:,}   d = {D_EXPECTED}")
+print(f"    difference: m {dm:+,}   d {dd:+}   -> {'OK' if dm == 0 and dd == 0 else 'NOT OK'}")
+
+
 # STEP 2 (A1.pdf): the three candidate data points; print m and d for each
 #         (a) one pixel:    m = H * W, d = 3   ->  photo.reshape(-1, 3)
 #         (b) one patch:    P = 32; cut the grid, compute a few features per patch
