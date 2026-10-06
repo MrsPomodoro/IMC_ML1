@@ -40,7 +40,33 @@ HOW TO HAND IN
 
 ======================================================================
 1. WHAT I ASKED THE LLM FOR
-   (Your actual prompts, verbatim. Including the ones that led nowhere.)
+  TASK 2:
+  Prompt 1: "write me short print code that always shows my values, the expected
+values and the difference between them" (plus my code for part a and an
+example of the output structure I wanted).
+Got: prints for expected values, difference and OK or NOT OK. Used it for part a.
+
+Prompt 2: "how I should write it to use ML principles? I did loop but I guess
+it's not efficient way."
+Got: photo.reshape(-1, 3) instead of my loop. One row per pixel, no loop.
+
+Prompt 3: "write me short python code for task 2.b, in the same style as my
+code for (a)" (plus task b).
+Got: reshape and transpose code for patches, but with expected values
+computed by the same formula as the result. But, A1.pdf gives no values for part b.
+
+Prompt 4: "there is no expected values for option b -and also for option c
+task. Just keep it mind."
+Got: part b without the expected values.
+
+Prompt 5: "can you please rewrite this code so I can understand it step by step."
+Got: part b split into single steps with the array shape after each step.
+
+Prompt 6: "(c) The whole image: m = 1. again provide me please step by step
+implementation so I can understand the logic"
+Got: part c, the whole image as one row, m = 1, d = H x W x 3.
+
+
 
 
 2. WHAT WAS WRONG WITH IT
@@ -51,9 +77,18 @@ HOW TO HAND IN
 
 
 3. HOW I CAUGHT IT
-   (Predict -> run -> check. What did you expect, what did you get? Which
-   printed number or which line of the traceback made you suspicious? Name
-   the actual check.)
+CHECKS I DID FOR TASK 2:
+2a Expected values, copied from A1.pdf for a check  How: I copied m = 42,467,328 and d = 3 from A1.pdf and subtracted them from my results.  Result: difference m +0, d +0, so OK. My values match the given ones.
+
+2b check_1: check if I got the same amount of pixels as in part a (patches x pixels per patch = m from part 
+How: one patch has 32 x 32 = 1,024 pixels, so 41,472 patches x 1,024 = 42,467,328. 
+Result: same as m from part a, so no pixels got lost. 
+
+check_2: check if both H and W are divisible without a remainder 
+How: 4,608 mod 32 = 0 and 9,216 mod 32 = 0. 
+Result: both remainders are 0, lost pixels = 0, so OK. 
+
+The image splits into whole patches, nothing is cut off at the edges.
 
 
 4. WHY I NOW TRUST THE RESULTS
