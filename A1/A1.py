@@ -106,15 +106,47 @@ M_EXPECTED = 42_467_328
 D_EXPECTED = 3
 
 X = photo.reshape(-1, 3)  
-m, d = X.shape
-dm, dd = m - M_EXPECTED, d - D_EXPECTED
-
+m_a, d_a = X.shape
+dm, dd = m_a - M_EXPECTED, d_a - D_EXPECTED
+print(f"     ")
+print(f"    (a) one pixel: ")
 print(f"    expected:   m = {M_EXPECTED:,}   d = {D_EXPECTED}")
 print(f"    difference: m {dm:+,}   d {dd:+}   -> {'OK' if dm == 0 and dd == 0 else 'NOT OK'}")
+print(f"    m = {m_a:,}   d = {d_a:}   ")
 
 
 
 #         (b) one patch:    P = 32; cut the grid, compute a few features per patch
+
+P = 32                                   # patch size in pixels (25 m on the ground)
+C = photo.shape[-1]                      # number of colour channels (3 for RGB)
+
+n_rows = H // P                          # patches vertically
+n_cols = W // P                          # patches horizontally
+
+cropped = photo[:n_rows * P, :n_cols * P]            # shape (n_rows*P, n_cols*P, C)
+
+# Step : split rows and columns into (patch index, pixel inside patch)
+grid = cropped.reshape(n_rows, P, n_cols, P, C)      # (patch_row, y, patch_col, x, C)
+
+# Step: put the two patch indices next to each other
+grid = grid.transpose(0, 2, 1, 3, 4)                 # (patch_row, patch_col, y, x, C)
+
+# Step: one row per patch, all its pixels listed together
+patches = grid.reshape(n_rows * n_cols, P * P, C)    # (n_patches, pixels_per_patch, C)
+
+# Step: features per patch = mean and std of each colour channel
+means = patches.mean(axis=1)                         # (n_patches, C)
+stds  = patches.std(axis=1)                          # (n_patches, C)
+
+# Step: glue features side by side -> data matrix
+X_b = np.hstack([means, stds])                       # (n_patches, 2*C)
+
+m_b, d_b = X_b.shape
+print(f"     ")
+print(f"    (b) one patch: ")
+print(f"    m = {m_b:,}   d = {d_b}")
+
 #         (c) whole image:  m = 1
 
 # STEP 3: the labels. A pixel's label is labels[row, column]. For every patch, the
