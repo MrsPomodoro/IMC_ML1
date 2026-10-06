@@ -1,4 +1,4 @@
-A1 WHY-TRAIL  --  <your e-mail address>
+A1 WHY-TRAIL  -- 26imc10840@fh-krems.ac.at or baska.klimekova@gmail.com
 ======================================================================
 Assignment: Data points, features and labels from one photograph
 Due:        Wed 07.10.2026, 23:59  --  attach this file AND A1.py to the A1 Aufgabe
@@ -61,6 +61,13 @@ HOW TO HAND IN
    see: about a quarter of this tile is vineyard, so the constant prediction
    "not vineyard" already has an accuracy of about 75 %. "The LLM said so" is
    worth zero points.)
+
+STARTED BASELINE 
+after run the command: klimek@Barbaras-MacBook-Pro-2 A1 % uv run get_wachau_photo.py I got the baseline from
+histogram of the labels:
+   0 = no parcel   77.9 % of the pixels
+   1 = vineyard    20.5 % of the pixels
+   2 = other crop   1.7 % of the pixels
 
 
 5. HAND COMPUTATION
