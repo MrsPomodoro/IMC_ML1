@@ -1,0 +1,71 @@
+A1 WHY-TRAIL  --  <your e-mail address>
+======================================================================
+Assignment: Data points, features and labels from one photograph
+Due:        Wed 07.10.2026, 23:59  --  attach this file AND A1.py to the A1 Aufgabe
+            in MS Teams (Aufgaben -> A1), then press Abgeben.
+
+WHAT THIS FILE IS
+  The why-trail is your written log of what you asked the LLM for, what came
+  back, and what you checked. Write it WHILE you work, not afterwards. 10-15
+  lines is plenty: what is graded is the verification log, not the amount of
+  text. The questions under each heading are prompts; delete them when done.
+
+HOW A1 IS SCORED  (100 points, identical for A1-A6)
+  Artifact, A1.py .................. 25 = it runs (15) + a defensible result (10)
+  Why-trail, sections 1-4 below .... 45 = a real flaw or data-leakage risk found (20)
+                                         + the result justified against a stated
+                                           baseline (15)
+                                         + readable and plain about what is still
+                                           uncertain (10)
+  Hand computation, section 5 ...... 30 = the by-hand question from A1.pdf,
+                                          worked on paper: no code, no LLM
+  The floor: copied code with a why-trail that contains no checks of your own
+  caps at 25 points, and cannot be explained at the five-minute oral spot-check
+  ("walk me through your own why-trail", randomly sampled). Using an LLM is
+  expected. Being misled by it is not.
+  The six assignments are equally weighted; their average is 50 % of the course
+  grade, the written exam (Sat 16.01.2027, 09:30-11:45, G.E.11) the other 50 %.
+  A second attempt is exam only: the portfolio does not carry over.
+
+HOW TO HAND IN
+  Two files, no ZIP: A1.py and A1_whytrail.txt, attached to the A1
+  Aufgabe in MS Teams -> Aufgaben -> A1, Abgeben pressed by 23:59 on the
+  deadline. Attach a first version early, in the session, and replace it as
+  often as you like: the attachment history is the only process record there
+  is, and a single upload at midnight is visible as such. Abgeben is the last
+  click, not the first. There is no course folder and no shared drive: you
+  work on your own laptop. After the deadline the reference solution is
+  released and we debrief it together.
+  Deadline clashing with work or family? Message me in Teams before it passes.
+
+======================================================================
+1. WHAT I ASKED THE LLM FOR
+   (Your actual prompts, verbatim. Including the ones that led nowhere.)
+
+
+2. WHAT WAS WRONG WITH IT
+   (At least ONE concrete thing: data points that overlap each other? a grid
+   split at random? a scaler fitted before the split? an accuracy reported
+   with no baseline? If the LLM got everything right: which mistake did you
+   expect, and how did you check that it was NOT there?)
+
+
+3. HOW I CAUGHT IT
+   (Predict -> run -> check. What did you expect, what did you get? Which
+   printed number or which line of the traceback made you suspicious? Name
+   the actual check.)
+
+
+4. WHY I NOW TRUST THE RESULTS
+   (A comparison against a stated baseline, or a check against what you can
+   see: about a quarter of this tile is vineyard, so the constant prediction
+   "not vineyard" already has an accuracy of about 75 %. "The LLM said so" is
+   worth zero points.)
+
+
+5. HAND COMPUTATION
+   (The one by-hand question from A1.pdf. Work it on paper, then write the
+   answer AND the working here, line by line. No code and no LLM for this one:
+   it is the part the written exam asks for directly.)
+
+
