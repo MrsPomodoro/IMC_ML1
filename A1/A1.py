@@ -104,14 +104,11 @@ print(f"pixel ({r}, {c}): RGB = {photo[r, c].tolist()}, label = {labels[r, c]}")
 M_EXPECTED = 42_467_328
 D_EXPECTED = 3
 
-pixels = []
-for r in range(H):
-    for c in range(W):
-        pixels.append(photo[r, c])
-m = len(pixels)
-d = len(pixels[0])
-
+#  -> data matrix X of shape (m, d)
+X = photo.reshape(-1, photo.shape[-1])   # (H*W, channels)
+m, d = X.shape
 dm, dd = m - M_EXPECTED, d - D_EXPECTED
+
 print(f"    expected:   m = {M_EXPECTED:,}   d = {D_EXPECTED}")
 print(f"    difference: m {dm:+,}   d {dd:+}   -> {'OK' if dm == 0 and dd == 0 else 'NOT OK'}")
 
