@@ -148,7 +148,22 @@ print(f"    (b) one patch: ")
 print(f"    m = {m_b:,}   d = {d_b}")
 
 #         (c) whole image:  m = 1
+C = photo.shape[-1]                      # number of colour channels (3 for RGB)
 
+# Step 1: count all values in the image
+n_values = H * W * C                     # every pixel, every channel
+
+# Step 2: lay every value out in one long row -> one sample
+row = photo.reshape(-1)                  # shape (H*W*C,)
+
+# Step 3: make it a data matrix with exactly 1 row
+X_c = row.reshape(1, n_values)           # shape (1, H*W*C)
+
+m_c, d_c = X_c.shape                     # m = 1, d = H*W*C
+
+print(f"     ")
+print(f"    (c) whole image: ")
+print(f"    m = {m_c:,}   d = {d_c:,}")
 # STEP 3: the labels. A pixel's label is labels[row, column]. For every patch, the
 #         share of its pixels with value 1; the patch is vineyard if the share exceeds
 #         a threshold. Print the share of vineyard patches for > 25 %, > 50 %, > 75 %.
