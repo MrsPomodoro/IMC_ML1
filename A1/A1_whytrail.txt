@@ -1,4 +1,4 @@
-A1 WHY-TRAIL  -- 26imc10840@fh-krems.ac.at or baska.klimekova@gmail.com
+A1 WHY-TRAIL  -- 26imc10840@fh-krems.ac.at 
 ======================================================================
 Assignment: Data points, features and labels from one photograph
 Due:        Wed 07.10.2026, 23:59  --  attach this file AND A1.py to the A1 Aufgabe
