@@ -151,6 +151,8 @@ print(f"    m = {m_b:,}   d = {d_b}")
 
 ## CHECKS:
 # check if I got the same amount of pixels as in (a) (patches x pixels per patch = m from (a))
+print(f"     ")
+print(f"    My checks task 2: ")
 total = m_b * P * P
 print(f"    patch check_1: {m_b:,} x {P*P:,} = {total:,}   "
       f"-> {'NO PIXELS GOT LOSS' if total == M_EXPECTED else 'I LOST SOME PIXELS'}")
@@ -179,6 +181,19 @@ m_c, d_c = X_c.shape                     # m = 1, d = H*W*C
 
 print(f"    m = {m_c:,}   d = {d_c:,}")
 
+
+# ---- checks task 2 by LLM ----
+print(f"     ")
+print(f"    ---- checks task 2 by LLM ---- ")
+def ok(cond):
+    return "OK" if cond else "NOT OK"
+
+print(f"    check same size photo/labels: {photo.shape[:2]} vs {labels.shape} "
+      f"-> {ok(photo.shape[:2] == labels.shape)}")
+print(f"    check shapes: X {X.shape}   X_b {X_b.shape}   X_c {X_c.shape} -> "
+      f"{ok(X.shape == (H*W, C) and X_b.shape == (n_rows*n_cols, 2*C) and X_c.shape == (1, H*W*C))}")
+print(f"    check finite X_b -> {ok(np.isfinite(X_b).all())}")
+print(f"    check stds >= 0 -> {ok((X_b[:, C:] >= 0).all())}")
 
 # STEP 3: the labels. A pixel's label is labels[row, column]. For every patch, the
 #         share of its pixels with value 1; the patch is vineyard if the share exceeds
@@ -224,9 +239,10 @@ for given_treshold in [threshold_25, threshold_50, threshold_75]:
     print(f"(c) image label > {given_treshold:.0%}:  image share = {img_share:.2%}   "
           f"vineyard = {y_c.sum()} of {y_c.size}   share = {y_c.mean():.0%}")
 
-
+## ChECKS
 # check for patches: mean share of all patches = share of vineyard pixels from (a)
 print(f"     ")
+print(f"    My checks task 3: ")
 print(f"    check for patches: ")
 # print(share)
 mean_share = vine_share.mean()             # average vineyard share over all patches
@@ -235,6 +251,18 @@ status = "OK" if np.isclose(mean_share, pixel_share) else "NOT OK"
 print(f"    check: mean share = {mean_share:.1%}   pixels = {pixel_share:.1%}   -> {status}")
 
 
+print(f"     ")
+
+# ---- checks task 3  by LLM ----
+print(f"     ")
+print(f"     ---- checks task 3  by LLM ---- ")
+print(f"    label values: {np.unique(labels)}")
+print(f"    check len X == len y_pixel: {len(X):,} vs {len(y_pixel):,}   "
+      f"-> {'OK' if len(X) == len(y_pixel) else 'NOT OK'}")
+print(f"    check len X_b == len vine_share: {len(X_b):,} vs {len(vine_share):,}   "
+      f"-> {'OK' if len(X_b) == len(vine_share) else 'NOT OK'}")
+print(f"    check shares between 0 and 1: "
+      f"-> {'OK' if ((vine_share >= 0) & (vine_share <= 1)).all() else 'NOT OK'}")
 
 # STEP 4: the baseline. For pixels, and for patches at each threshold: print the
 #         vineyard share and the accuracy of the constant majority prediction.

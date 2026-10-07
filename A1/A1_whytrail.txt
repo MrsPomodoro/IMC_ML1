@@ -71,6 +71,11 @@ so no edge pixels are lost when I cut the image into patches. print OK if
 both are 0, otherwise NOT OK and how many pixels can be divided (left)"
 Got: check with H % P, W % P and number of lost pixels. Used it as check_2.
 
+Prompt 7: "what other features I can try for 2.b? would max and min make sense?"
+Got: yes, min and max, plus median, percentiles, colour indices, brightness
+and texture. It warned that one noisy pixel can set min or max.
+I didnt implement that at all. 
+
 TASK 3:
 Prompt 8: task 3 text from A1.pdf plus "give me the python code for option a)
 the datapoint is a pixel"
@@ -94,7 +99,24 @@ datapoint is whole img"
 Got: one share for the whole image and one label per threshold. With m = 1
 the share of vineyard data points can only be 0 or 100 percent.
 
+Prompt 12: "what check should I implement to task 2 and task 3 based on
+best practice?"
+Got: a list of checks that catch silent bugs, with code:
+task 2: photo and labels have the same size, shapes of X, X_b and X_c,
+no NaN or inf in X_b, stds not negative, and one patch computed by hand
+compared with its row in X_b (this one catches a wrong transpose).
+task 3: label values, len X equals len y_pixel, len X_b equals len
+vine_share, shares between 0 and 1, share of vineyard patches goes down
+when the threshold goes up, and one patch share computed by hand.
+Problem: the code used names that are not in my file (X_a, y_a) and a
+function ok() that I had not defined. I renamed X_a to X and y_a to
+y_pixel and added the ok() function, otherwise it would crash.
 
+Prompt 13: "give me a comments so I can understand the logic" (plus the
+task 3 checks)
+Got: a comment above each check that says what it tests and what a
+NOT OK would mean, for example that X and y_pixel out of alignment
+would make any model learn garbage.
 
 2. WHAT WAS WRONG WITH IT
 Problem - task 3: wrong vineyard share per patch
