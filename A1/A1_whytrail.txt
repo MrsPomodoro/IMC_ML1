@@ -136,6 +136,24 @@ when the threshold goes up, because every patch above 75 percent is also
 above 50 and 25 percent. 
 
 
+ADDITIONAL CHECKING 
+Prompt 17: "how I can check these potential problems that are mentioned
+in the tasks? data points that overlap each other"
+Got: two checks
+1) Overlap check: every pixel gets a unique ID, the IDs are cut into
+patches and every pixel must appear exactly once (min = 1, max = 1).
+2) Square check: for three patches it cuts the 32 x 32 square directly
+from the photo and the mask and compares it with the patch from the
+reshape. This is the only check that catches a missing transpose.
+
+Prompt 18: "give me the check if there is any data-leakage risk in my
+implementation"
+Got: one block with 8 leakage checks: same patch in train and test, split
+covers all patches once, identical feature rows in train and test,
+neighbouring patches across the split, scaler fitted on all data, feature
+almost equal to the label, features built from the labels, baseline on the
+test set.
+
 2. WHAT WAS WRONG WITH IT
 Problem - task 3: wrong vineyard share per patch
 I got this after printing my check in task 3: 
@@ -164,10 +182,24 @@ threshold), instead of the list shares that the loop collects.
 Fix:  I used shares in that line instead.
 
 
+Problem  - checks that I cant implement yet
+lot  of the suggested checks need a train/test split  but A1 assignment has no
+split and no model yet. The code would crash on undefined variables and
+on the missing scikit-learn. It would test something that does not exist
+in my implementation.
+
+What I kept: only the check that no feature is almost the label
+(correlation between each feature and the patch label at > 50 %).
+The check that features come only from the photo I did not run as code,
+it is clear from my code: X_b is built from patches, so from the photo,
+never from the mask. And also that patch is squere and  that every pixel belongs
+to exactly one patch (no physical overlap, no gaps).
+
 3. HOW I CAUGHT IT
 CHECKS I DID FOR TASK 2:
 2a Expected values, copied from A1.pdf for a check 
-How: I copied m = 42,467,328 and d = 3 from A1.pdf and subtracted them from my results.  Result: difference m +0, d +0, so OK. My values match the given ones.
+How: I copied m = 42,467,328 and d = 3 from A1.pdf and subtracted them from my results. 
+Result: difference m +0, d +0, so OK. My values match the given ones.
 
 2b check_1: check if I got the same amount of pixels as in part a (patches x pixels per patch = m from part 
 How: one patch has 32 x 32 = 1,024 pixels, so 41,472 patches x 1,024 = 42,467,328. 
@@ -180,14 +212,27 @@ Result: both remainders are 0, lost pixels = 0, so OK.
 The image splits into whole patches, nothing is cut off at the edges.
 
 
+CHECKS BASED ON LLM ADVICES WHAT TO CHECK:
+Overlap check: check if every pixel is in exactly one patch
+(no overlapping data points, no gaps)
+How: I gave every pixel a unique ID, cut the IDs into patches the same way
+as the photo and counted how often each ID appears. Expected min = 1 and
+max = 1.
+Result: min = 1, max = 1, so OK. Every pixel is in exactly one patch, the
+patches do not overlap and there are no gaps.
+Note: this check only shows no overlap
+
+
+Leakage risks I checked now: features are built only from the photo
+(X_b comes from patches = photo), never from the mask. No feature is
+almost the label:   
+    label leakage:  max |corr(feature, label)| = 0.443   -> OK
+All other suggested leakage risks checks are for later (no split or model in A1 yet).
+
 4. WHY I NOW TRUST THE RESULTS
-   (A comparison against a stated baseline, or a check against what you can
-   see: about a quarter of this tile is vineyard, so the constant prediction
-   "not vineyard" already has an accuracy of about 75 %. "The LLM said so" is
-   worth zero points.)
 
 STARTED BASELINE 
-after run the command: klimek@Barbaras-MacBook-Pro-2 A1 % uv run get_wachau_photo.py I got the baseline from
+after run the command: klimek@Barbaras-MacBook-Pro-2 A1 % uv run A1.py I got the baseline from
 histogram of the labels:
    0 = no parcel   77.9 % of the pixels
    1 = vineyard    20.5 % of the pixels
@@ -197,8 +242,9 @@ BASELINE AFTER STEP 4
 Pixels: vineyard share 20.48 %, baseline accuracy 79.52 %. 
 Patches: 
   threshold > 25 %: vineyard share 24.62 %, baseline accuracy 75.38 % 
-  threshold > 50 %: vineyard share 21.44 %, baseline accuracy 78.56 % ň
+  threshold > 50 %: vineyard share 21.44 %, baseline accuracy 78.56 % 
   threshold > 75 %: vineyard share 17.07 %, baseline accuracy 82.93 % 
+
 A higher threshold gives fewer vineyard patches, so the baseline goes up. 
 My check confirmed that the share goes down: 24.62 % > 21.44 % > 17.07 % -> OK. 
 In every line share + baseline = 100 %, and every baseline is above 50 %. 
@@ -206,8 +252,42 @@ At > 50 % the patch share (21.44 %) is close to the pixel share (20.48 %).
 
 
 5. HAND COMPUTATION
-   (The one by-hand question from A1.pdf. Work it on paper, then write the
-   answer AND the working here, line by line. No code and no LLM for this one:
-   it is the part the written exam asks for directly.)
 
+1) Label all eight data points using “vineyard if more than half the patch is vineyard”.
+For each patch I checked two conditions: parcel type = vine AND
+parcel cover more than 50 %. I wrote the result in a new row "label":
+vineyard if both conditions are true, not vineyard otherwise.
+
+   patch        1     2     3     4     5     6     7      8
+   cover        0%    90%   100%  0%    60%   0%    30%    95%
+   type         -     vine  vine  -     vine  -     maize  vine
+   label        not   vine  vine  not   vine  not   not    vine
+
+Vineyard patches are: 2, 3, 5 and 8.
+
+2) What is the vineyard share?
+Number of vineyard patches divided by number of all patches:
+4 / 8 = 0.5 = 50 %
+
+3) What accuracy does the constant prediction “not vineyard” have on these eight data points?
+4 patches are vineyard (2, 3, 5, 8), 4 are not vineyard (1, 4, 6, 7).
+The prediction is right for the 4 not vineyard patches.
+Accuracy = 1 - vineyard share = 1 - 0.5 = 0.5 = 50 %
+Check: 50 % + 50 % = 100 %.
+But I got 2 groups with same 50%, therefore there is no majority class here, so this baseline is no good.
+
+4) One sentence: if you had instead kept only the patches a parcel covers at all, what would the
+vineyard share have become, and why does that number mislead?
+
+
+I removed the 3 patches with no parcel cover (1, 4 and 6), so 8 - 3 = 5
+patches are left, and 4 of them are vineyard.
+New vineyard share = 4 / 5 = 0.8 = 80 %, so now vineyard is the majority
+class, not "not vineyard".
+
+One sentence: If I keep only the patches with a parcel, the vineyard share
+becomes 80 %, which is now majoryty group itself, and it is misleading because 
+I removed the patches where nobody declared anything, so almost all remaining patches are vineyards
+and a model trained on this would think vineyards are much more common than they really are. 
+(I need more examples of not vineyard in the data).
 

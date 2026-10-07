@@ -297,3 +297,35 @@ print(f"    check share falls with threshold: {[f'{s:.2%}' for s in shares]}   "
       f"-> {ok(shares == sorted(shares, reverse=True))}")
 
 # STEPS 5 and 6 are written in A1_whytrail.txt, not here.
+
+
+# ---- Additional checking by LLM----
+print(f"     ")
+print(f"    ADDITIONAL CHECKES ")
+print(f"    overlapping data points: ")
+
+def ok(cond): return "OK" if cond else "NOT OK"
+
+# 1) every pixel belongs to exactly one patch (no physical overlap, no gaps)
+ids = np.arange(H * W).reshape(H, W)                                  # unique ID per pixel
+id_patches = (ids[:n_rows*P, :n_cols*P]
+              .reshape(n_rows, P, n_cols, P).transpose(0, 2, 1, 3)
+              .reshape(n_rows * n_cols, P * P))                       # same cut as the photo
+counts = np.bincount(id_patches.ravel(), minlength=H * W)[ids[:n_rows*P, :n_cols*P].ravel()]
+print(f"    check each pixel in exactly one patch: min = {counts.min()}   max = {counts.max()}   "
+      f"-> {ok(counts.min() == 1 and counts.max() == 1)}")
+
+# 2} every patch is a real P x P square (this one needs the transpose)
+print(f"    square patches: ")
+for i, j in [(0, 0), (n_rows // 2, n_cols // 3), (n_rows - 1, n_cols - 1)]:
+    k = i * n_cols + j                                          # row of patch (i, j) in X_b
+    square = photo[i*P:(i+1)*P, j*P:(j+1)*P].reshape(-1, C)     # cut the square directly
+    square_lab = labels[i*P:(i+1)*P, j*P:(j+1)*P].reshape(-1)   # same square in the mask
+    same = np.array_equal(patches[k], square) and np.array_equal(lab_patches[k], square_lab)
+    print(f"    check patch ({i}, {j}) is a square: -> {ok(same)}")
+
+    # ---- leakage check: no feature is (almost) the label itself ----
+print(f"    label leakage: ")
+y = (vine_share > threshold_50).astype(float)                # patch labels at > 50 %
+corr = [abs(np.corrcoef(X_b[:, f], y)[0, 1]) for f in range(X_b.shape[1])]
+print(f"    max |corr(feature, label)| = {max(corr):.3f}   -> {ok(max(corr) < 0.95)}")
