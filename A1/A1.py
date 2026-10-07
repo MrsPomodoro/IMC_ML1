@@ -161,7 +161,7 @@ print(f"    patch check_1: {m_b:,} x {P*P:,} = {total:,}   "
 rest_H, rest_W = H % P, W % P
 lost = H * W - (H - rest_H) * (W - rest_W)
 status = "OK" if rest_H == 0 and rest_W == 0 else "NOT OK"
-print(f"    patch check_2: H / P = {rest_H}   W / P = {rest_W}   lost pixels = {lost:,}   -> {status}")
+print(f"    patch check_2: H % P = {rest_H}   W %  P = {rest_W}   lost pixels = {lost:,}   -> {status}")
 
 #         (c) whole image:  m = 1
 print(f"     ")
@@ -266,5 +266,34 @@ print(f"    check shares between 0 and 1: "
 
 # STEP 4: the baseline. For pixels, and for patches at each threshold: print the
 #         vineyard share and the accuracy of the constant majority prediction.
+print(f"     ")
+print(f"    STEP 4 ")
+
+# for option (a) datapoint = pixels
+share_a = y_pixel.mean()                         # fraction of vineyard pixels
+majority_a = "vineyard" if share_a > 0.5 else "not vineyard"
+accuracy_a = max(share_a, 1 - share_a)                # accuracy of always predicting the majority
+print(f"    (a) for datapoint = pixel:          vineyard share = {share_a:.2%}   majority = {majority_a:<12}   baseline accuracy = {accuracy_a:.2%}")
+
+# for option (b) datapoint = patches, one label set per threshold
+for t in [threshold_25, threshold_50, threshold_75]:
+    y_b = (vine_share > t)                       # patch label at this threshold
+    share_b = y_b.mean()                         # fraction of vineyard patches
+    majority_b = "vineyard" if share_b > 0.5 else "not vineyard"
+    accuracy_b = max(share_b, 1 - share_b)
+    print(f"    (b) patch > {t:.0%}:    vineyard share = {share_b:.2%}   majority = {majority_b:<12}   baseline accuracy = {accuracy_b:.2%}")
+
+
+# ---- checks task 4  by LLM ----
+# higher threshold -> fewer vineyard patches
+# patches at every threshold
+shares, accurenciess = [], []
+for t in [threshold_25, threshold_50, threshold_75]:
+    y_b = (vine_share > t)
+    share_b, accurancy_b = y_b.mean(), max(y_b.mean(), 1 - y_b.mean())
+    shares.append(share_b); accurenciess.append(accurancy_b)
+
+print(f"    check share falls with threshold: {[f'{s:.2%}' for s in shares]}   "
+      f"-> {ok(shares == sorted(shares, reverse=True))}")
 
 # STEPS 5 and 6 are written in A1_whytrail.txt, not here.

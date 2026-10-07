@@ -118,6 +118,24 @@ Got: a comment above each check that says what it tests and what a
 NOT OK would mean, for example that X and y_pixel out of alignment
 would make any model learn garbage.
 
+TASK 4:
+Prompt 14: "continue please with task 4" (plus the task 4 text from A1.pdf
+and the STEP 4 comment from A1.py)
+Got: baseline code for pixels and for patches at each threshold:
+vineyard share, majority class and accuracy = max(share, 1 - share).
+
+
+Prompt 15: "thank you, please now give me examples how should I check this -
+if the values make sense based on good practice?"
+Got: several checks for task 4: build the constant prediction by hand and
+compare with the formula, baseline must be at least 50 percent, pixel share
+must be 20.5 percent like in step 3, cross check with DummyClassifier from
+scikit-learn, share must go down and baseline must go up with the threshold.
+I implemented only one of them: the share of vineyard patches must go down
+when the threshold goes up, because every patch above 75 percent is also
+above 50 and 25 percent. 
+
+
 2. WHAT WAS WRONG WITH IT
 Problem - task 3: wrong vineyard share per patch
 I got this after printing my check in task 3: 
@@ -138,10 +156,18 @@ Fix- A1.pdf gives no expected values for part b, so I removed it and
 used my own logical checks instead (check_1 and check_2).
  
 
+Problem - task 4: LLM check code crashed
+The check "share falls with threshold" from the LLM stopped with:
+    TypeError: 'numpy.float64' object is not iterable
+The line looped over share_b, which is one number (the share of the last
+threshold), instead of the list shares that the loop collects.
+Fix:  I used shares in that line instead.
+
 
 3. HOW I CAUGHT IT
 CHECKS I DID FOR TASK 2:
-2a Expected values, copied from A1.pdf for a check  How: I copied m = 42,467,328 and d = 3 from A1.pdf and subtracted them from my results.  Result: difference m +0, d +0, so OK. My values match the given ones.
+2a Expected values, copied from A1.pdf for a check 
+How: I copied m = 42,467,328 and d = 3 from A1.pdf and subtracted them from my results.  Result: difference m +0, d +0, so OK. My values match the given ones.
 
 2b check_1: check if I got the same amount of pixels as in part a (patches x pixels per patch = m from part 
 How: one patch has 32 x 32 = 1,024 pixels, so 41,472 patches x 1,024 = 42,467,328. 
@@ -166,6 +192,17 @@ histogram of the labels:
    0 = no parcel   77.9 % of the pixels
    1 = vineyard    20.5 % of the pixels
    2 = other crop   1.7 % of the pixels
+
+BASELINE AFTER STEP 4 
+Pixels: vineyard share 20.48 %, baseline accuracy 79.52 %. 
+Patches: 
+  threshold > 25 %: vineyard share 24.62 %, baseline accuracy 75.38 % 
+  threshold > 50 %: vineyard share 21.44 %, baseline accuracy 78.56 % ň
+  threshold > 75 %: vineyard share 17.07 %, baseline accuracy 82.93 % 
+A higher threshold gives fewer vineyard patches, so the baseline goes up. 
+My check confirmed that the share goes down: 24.62 % > 21.44 % > 17.07 % -> OK. 
+In every line share + baseline = 100 %, and every baseline is above 50 %. 
+At > 50 % the patch share (21.44 %) is close to the pixel share (20.48 %).
 
 
 5. HAND COMPUTATION
