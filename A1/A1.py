@@ -98,10 +98,11 @@ print(f"pixel ({r}, {c}): RGB = {photo[r, c].tolist()}, label = {labels[r, c]}")
 # and the same reshape on labels gives you each patch's share of vineyard pixels.
 
 
-# TODO: STEP 2 (A1.pdf): the three candidate data points; print m and d for each
+# STEP 2 (A1.pdf): the three candidate data points; print m and d for each
 #         (a) one pixel:    m = H * W, d = 3   ->  photo.reshape(-1, 3)
 
 print(f"     ")
+print(f"    STEP 2 ")
 print(f"    (a) one pixel: ")
 
 # Expected values, copied from A1.pdf for a check 
@@ -161,7 +162,6 @@ status = "OK" if rest_H == 0 and rest_W == 0 else "NOT OK"
 print(f"    patch check_2: H / P = {rest_H}   W / P = {rest_W}   lost pixels = {lost:,}   -> {status}")
 
 #         (c) whole image:  m = 1
-
 print(f"     ")
 print(f"    (c) whole image: ")
 C = photo.shape[-1]                      # number of colour channels (3 for RGB)
@@ -183,6 +183,49 @@ print(f"    m = {m_c:,}   d = {d_c:,}")
 # STEP 3: the labels. A pixel's label is labels[row, column]. For every patch, the
 #         share of its pixels with value 1; the patch is vineyard if the share exceeds
 #         a threshold. Print the share of vineyard patches for > 25 %, > 50 %, > 75 %.
+print(f"     ")
+print(f"    STEP 3 ")
+
+#  for (a) option - data point is a pixel,  label: 1 = vineyard, 0 and 2 = not vineyard
+y_pixel = (labels.reshape(-1) == 1)          # (m_a,) one True / False per pixel, same order as X
+print(f"    data point: (a) pixel ")
+print(f"    labels: m = {len(y_pixel):,}   vineyard pixels = {y_pixel.mean():.1%}")     # vineyard pixels / all pixels y_pixel.sum() / len(y_pixel)   
+
+#  fro (b)  option - datapoint is patch, label per patch: vineyard if share of pixels with value 1 > threshold
+print(f"     ")
+print(f"    data point: (b) patch ")
+# thresholds for the patch label
+threshold_25 = 0.25
+threshold_50 = 0.50
+threshold_75 = 0.75
+
+# Step: cut labels into the same patches as the photo (same crop, same order)
+lab_cropped = labels[:n_rows * P, :n_cols * P]                        # (n_rows*P, n_cols*P)
+lab_grid = lab_cropped.reshape(n_rows, P, n_cols, P).transpose(0, 2, 1, 3)
+lab_patches = lab_grid.reshape(n_rows * n_cols, P * P)               # (n_patches, P*P)
+
+# Step: share of vineyard pixels (value 1) in every patch; 0 and others count as not vineyard
+vine_share = (lab_patches == 1).mean(axis=1)                          # (n_patches,)
+
+# Step: label per threshold and print the share of vineyard patches
+for given_treshold in [threshold_25, threshold_50, threshold_75]:
+    y_b = (vine_share > given_treshold)                                            # True = vineyard
+    print(f"patch labels > {given_treshold:.0%}:  vineyard = {y_b.sum():,} of {y_b.size:,}   share = {y_b.mean():.2%}")
+
+
+# for (c) option - the datapoint is the whole image: vineyard if share of pixels with value 1 > threshold
+print(f"     ")
+print(f"    data point: (c) whole img ")
+# Step: share of vineyard pixels in the whole image (0 and others count as not vineyard)
+img_share = (labels == 1).mean()                                      # one number
+
+# Step: one label per threshold (m = 1, so the share of vineyard data points is 0% or 100%)
+for given_treshold in [threshold_25, threshold_50, threshold_75]:
+    y_c = np.array([img_share > given_treshold])                                   # shape (1,)
+    print(f"(c) image label > {given_treshold:.0%}:  image share = {img_share:.2%}   "
+          f"vineyard = {y_c.sum()} of {y_c.size}   share = {y_c.mean():.0%}")
+
+
 
 # STEP 4: the baseline. For pixels, and for patches at each threshold: print the
 #         vineyard share and the accuracy of the constant majority prediction.
