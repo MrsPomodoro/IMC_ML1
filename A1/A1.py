@@ -218,12 +218,20 @@ print(f"     ")
 print(f"    data point: (c) whole img ")
 # Step: share of vineyard pixels in the whole image (0 and others count as not vineyard)
 img_share = (labels == 1).mean()                                      # one number
-
 # Step: one label per threshold (m = 1, so the share of vineyard data points is 0% or 100%)
 for given_treshold in [threshold_25, threshold_50, threshold_75]:
     y_c = np.array([img_share > given_treshold])                                   # shape (1,)
     print(f"(c) image label > {given_treshold:.0%}:  image share = {img_share:.2%}   "
           f"vineyard = {y_c.sum()} of {y_c.size}   share = {y_c.mean():.0%}")
+
+
+print(f"     ")
+print(f"    check for patches: ")
+# check for patches: mean share of all patches = share of vineyard pixels from (a)
+mean_share = share.mean()             # average vineyard share over all patches
+pixel_share = y_pixel.mean()          # vineyard share over all pixels
+status = "OK" if np.isclose(mean_share, pixel_share) else "NOT OK"
+print(f"    check: mean share = {mean_share:.1%}   pixels = {pixel_share:.1%}   -> {status}")
 
 
 
