@@ -225,10 +225,11 @@ for given_treshold in [threshold_25, threshold_50, threshold_75]:
           f"vineyard = {y_c.sum()} of {y_c.size}   share = {y_c.mean():.0%}")
 
 
+# check for patches: mean share of all patches = share of vineyard pixels from (a)
 print(f"     ")
 print(f"    check for patches: ")
-# check for patches: mean share of all patches = share of vineyard pixels from (a)
-mean_share = share.mean()             # average vineyard share over all patches
+# print(share)
+mean_share = vine_share.mean()             # average vineyard share over all patches
 pixel_share = y_pixel.mean()          # vineyard share over all pixels
 status = "OK" if np.isclose(mean_share, pixel_share) else "NOT OK"
 print(f"    check: mean share = {mean_share:.1%}   pixels = {pixel_share:.1%}   -> {status}")

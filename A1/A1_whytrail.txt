@@ -41,7 +41,7 @@ HOW TO HAND IN
 ======================================================================
 1. WHAT I ASKED THE LLM FOR
   TASK 2:
-  Prompt 1: "write me short print code that always shows my values, the expected
+Prompt 1: "write me short print code that always shows my values, the expected
 values and the difference between them" (plus my code for part a and an
 example of the output structure I wanted).
 Got: prints for expected values, difference and OK or NOT OK. Used it for part a.
@@ -66,14 +66,55 @@ Prompt 6: "(c) The whole image: m = 1. again provide me please step by step
 implementation so I can understand the logic"
 Got: part c, the whole image as one row, m = 1, d = H x W x 3.
 
+Prompt 7: "write me please a short check code that H and W are divisible by P,
+so no edge pixels are lost when I cut the image into patches. print OK if
+both are 0, otherwise NOT OK and how many pixels can be divided (left)"
+Got: check with H % P, W % P and number of lost pixels. Used it as check_2.
+
+TASK 3:
+Prompt 8: task 3 text from A1.pdf plus "give me the python code for option a)
+the datapoint is a pixel"
+Got: labels.reshape(-1) == 1, one True or False per pixel in the same order
+as X, and the vineyard share of all pixels.
+
+Prompt 9: "Now give me now please a python script for option b) when patches
+are data points. I have defined these thresholds: 0.25, 0.50, 0.75"
+Got: the mask cut into patches exactly like the photo, vine_share per patch,
+and the share of vineyard patches for each threshold.
+
+Prompt 10: "write me short check code for step 3, add it under my prints.
+my idea: all patches have the same size (1,024 pixels) and no pixels got lost
+(I checked that in step 2), so the average vineyard share over all patches
+must be exactly the same as the vineyard share over all pixels (20.5 %)."
+Got: check that compares vine_share.mean() with the pixel share using
+np.isclose. The check idea was mine, the LLM only wrote the code.
+
+Prompt 11: "Now give me now please a python script for option c) when
+datapoint is whole img"
+Got: one share for the whole image and one label per threshold. With m = 1
+the share of vineyard data points can only be 0 or 100 percent.
 
 
 
 2. WHAT WAS WRONG WITH IT
-   (At least ONE concrete thing: data points that overlap each other? a grid
-   split at random? a scaler fitted before the split? an accuracy reported
-   with no baseline? If the LLM got everything right: which mistake did you
-   expect, and how did you check that it was NOT there?)
+Problem - task 3: wrong vineyard share per patch
+I got this after printing my check in task 3: 
+  mean share = 1.7%   pixels = 20.5%   -> NOT OK
+This must be wrong. 1.7 % is exactly the share of value 2 (other crop) in the label histogram,
+so the variable share counted the wrong label, not vineyard (value 1). I printed the share variables and
+got 0.016735571402090567, that's wrong. So I check and the code use share but it should use vine_share.
+The same check with the variable vine_share gave 20.5 % for both -> OK.
+So the check itself was right, the variable share was wrong.
+Fix-  I use only vine_share in step 3, also for the three thresholds.
+
+
+Problem - task 2b: circular check
+For part b in task 2 the LLM computed the expected m with the same formula as the
+result, (H // P) x (W // P). Such a check always says OK, so it checks
+nothing. 
+Fix- A1.pdf gives no expected values for part b, so I removed it and
+used my own logical checks instead (check_1 and check_2).
+ 
 
 
 3. HOW I CAUGHT IT
