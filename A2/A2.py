@@ -154,14 +154,9 @@ class Imputer:
         y = labels_of(patches)         # (m, 3)  what you are learning to predict
         X = features_of(patches)       # (m, d)  what you are allowed to look at, d = 672
 
-        # ---- FILLED IN FOR YOU: the baseline ----------------------------------------------
-        # The whole method, working, so that the file runs and the contract holds from the
-        # first minute. It is also the dullest imputer there is: it throws X and y away and
-        # remembers ONE colour, the average of every pixel of every training patch. Whatever
-        # patch it is later shown, that is its answer.
-        #
-        # This is the baseline from the sheet, and the number you have to get below.
-        self.model = patches.reshape(-1, 3).mean(axis=0)      # one colour: (3,)
+        # ---- My solution ----------------------------------------------
+    
+        # dummy setup self.model = patches.reshape(-1, 3).mean(axis=0)      # one colour: (3,)
         #
         # TODO: replace the line above with a model that actually looks at X, for example
         #           from sklearn.linear_model import LinearRegression
@@ -169,8 +164,36 @@ class Imputer:
         #       and store anything predict() will need, such as the patch side you trained on:
         #           self.patch_side = patches.shape[1]
         # -----------------------------------------------------------------------------------
+        from sklearn.linear_model import LinearRegression
+        self.model = LinearRegression().fit(X, y)
+        self.patch_side = patches.shape[1]      
+        self.mean_colour = patches.reshape(-1, 3).mean(axis=0)   # the baseline as a fallback
         return self
 
+    def _to_train_size(self, patch):
+        """Cut or pad ONE patch (H, W, 3) to the training size (P, P, 3). The centre stays centred."""
+        H, W, _ = patch.shape
+        P = self.patch_side
+
+        # mean colour of all pixels EXCEPT the centre: used to fill the padding
+        keep = np.ones((H, W), dtype=bool)
+        keep[H // 2, W // 2] = False
+        fill = patch[keep].mean(axis=0) if keep.any() else self.mean_colour
+
+        # 1. cut: keep at most P rows and P columns, symmetrically around the centre
+        r0 = max((H - P) // 2, 0)
+        c0 = max((W - P) // 2, 0)
+        part = patch[r0:r0 + min(H, P), c0:c0 + min(W, P)]
+        h, w = part.shape[:2]
+
+        # 2. pad: place that piece in the middle of a P x P canvas filled with `fill`
+        out = np.empty((P, P, 3), dtype=np.float32)
+        out[:] = fill
+        R0, C0 = (P - h) // 2, (P - w) // 2
+        out[R0:R0 + h, C0:C0 + w] = part
+        return out
+
+    
     def predict(self, patch):
         """Predict the centre pixel of ONE patch.
 
@@ -194,16 +217,19 @@ class Imputer:
         if self.model is None:
             return -1                                      # nobody has called train() yet
 
-        # ---- FILLED IN FOR YOU: the baseline ----------------------------------------------
-        # It answers the same colour for every patch, without looking at a single pixel of it.
-        return self.model
-        #
+        # ---- My solution ----------------------------------------------
+
+        # baseline:         return self.model         # It answers the same colour for every patch, without looking at a single pixel of it.
+
         # TODO: look at the pixels instead. features_of() expects a STACK of patches, so one
         #       patch becomes patch[None] of shape (1, H, W, 3), and its feature row is
         #           features_of(patch[None].astype(np.float32))[0]
         #       Remember that `patch` may be bigger or smaller than what you trained on.
         # -----------------------------------------------------------------------------------
-
+        p = self._to_train_size(patch.astype(np.float32))  # (15, 15, 3), centre still in the middle
+        x = features_of(p[None])                            # (1, 672): neighbours as one row
+        guess = self.model.predict(x)[0]                  # (3,): R, G, B of the centre pixel
+        return np.clip(guess, 0, 255)                      # colors are from 0 to 255
 
 # ============================================================================================
 # YOUR OWN EXPERIMENTS. None of this runs when I import the file.
@@ -282,6 +308,7 @@ if __name__ == "__main__":
     #   That baseline reaches about 1300. Print your own validation error next to it and
     #   watch the gap while you try things. You are not asked to hand any number in; I
     #   measure your Imputer myself, on my own patches.
+    print("\n=== Model: Linear Regression ===")
     imputer = Imputer().train(train_patches)
     print(f"training error   E_t = {error_of(imputer, train_patches):8.1f}")
     print(f"validation error E_v = {error_of(imputer, val_patches):8.1f}   "
