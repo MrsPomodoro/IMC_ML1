@@ -312,7 +312,7 @@ if __name__ == "__main__":
     imputer = Imputer().train(train_patches)
     print(f"training error   E_t = {error_of(imputer, train_patches):8.1f}")
     print(f"validation error E_v = {error_of(imputer, val_patches):8.1f}   "
-          f"<- the baseline as shipped; get below it")
+          f"<- the baseline was about 1300")
 
     # The contract the test run depends on. As shipped this prints the same three numbers
     # twice (the mean label), then -1 twice. It must keep printing three numbers, three
