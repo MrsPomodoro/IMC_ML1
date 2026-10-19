@@ -164,8 +164,14 @@ class Imputer:
         #       and store anything predict() will need, such as the patch side you trained on:
         #           self.patch_side = patches.shape[1]
         # -----------------------------------------------------------------------------------
-        from sklearn.linear_model import LinearRegression
-        self.model = LinearRegression().fit(X, y)
+        from sklearn.linear_model import LinearRegression, Ridge
+
+        #  Model 1: Linear Regression  (E_v = 7.6) 
+        # self.model = LinearRegression().fit(X, y)
+
+        # Model 2: Ridge regression 
+        self.model = Ridge(alpha=1000).fit(X, y)
+        # self.model = Ridge(alpha=10000000).fit(X, y)
         self.patch_side = patches.shape[1]      
         self.mean_colour = patches.reshape(-1, 3).mean(axis=0)   # the baseline as a fallback
         return self
@@ -308,7 +314,9 @@ if __name__ == "__main__":
     #   That baseline reaches about 1300. Print your own validation error next to it and
     #   watch the gap while you try things. You are not asked to hand any number in; I
     #   measure your Imputer myself, on my own patches.
+    
     print("\n=== Model: Linear Regression ===")
+    # print("\n=== Model: Ridge regression, alpha=1000 000 ===")
     imputer = Imputer().train(train_patches)
     print(f"training error   E_t = {error_of(imputer, train_patches):8.1f}")
     print(f"validation error E_v = {error_of(imputer, val_patches):8.1f}   "
