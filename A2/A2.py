@@ -342,7 +342,7 @@ if __name__ == "__main__":
     # print("\n=== Model: Linear Regression ===")
     # print("\n=== Model: Ridge regression, alpha=1000 000 ===")
     # print("\n=== Model: Linear Regression, patch 5 x 5 ===")
-    print("\n=== Model: Linear Regression, patch 7 x 7 ===")
+    # print("\n=== Model: Linear Regression, patch 7 x 7 ===")
     # print("\n=== Model: Linear Regression, patch 9 x 9 ===")
     print("\n=== Model: Linear Regression, with data augmentation, patch 7 x 7 ===")
 
