@@ -73,7 +73,7 @@ HERE = Path(__file__).resolve().parent
 # somewhere else in the file: when I import, none of the bottom half has run.
 # ---------------------------------------------------------------------------------------------
 
-PATCH = 15              # the patch side you train on. ANY ODD NUMBER; change it if you want to.
+PATCH = 7        #15      # the patch side you train on. ANY ODD NUMBER; change it if you want to.
 WEST_SHARE = 0.70       # the western 70 % of the columns train, the eastern 30 % validate
 
 
@@ -151,51 +151,75 @@ class Imputer:
         It has to finish within two minutes on 5,000 patches of 15 x 15.
         """
         patches = np.asarray(patches, dtype=np.float32)
-        y = labels_of(patches)         # (m, 3)  what you are learning to predict
-        X = features_of(patches)       # (m, d)  what you are allowed to look at, d = 672
 
-        # ---- My solution ----------------------------------------------
-    
         # dummy setup self.model = patches.reshape(-1, 3).mean(axis=0)      # one colour: (3,)
         #
         # TODO: replace the line above with a model that actually looks at X, for example
         #           from sklearn.linear_model import LinearRegression
         #           self.model = LinearRegression().fit(X, y)
-        #       and store anything predict() will need, such as the patch side you trained on:
+        #           and store anything predict() will need, such as the patch side you trained on:
         #           self.patch_side = patches.shape[1]
         # -----------------------------------------------------------------------------------
+
+
+        # ---- My solution ----------------------------------------------
+
+        # During check I found out that patch 7x7 gives a better validation error than 15x15, so I cut or pad to that size.
+        SIDE = 7
+        H, W = patches.shape[1], patches.shape[2]
+        r0, c0 = max((H - SIDE) // 2, 0), max((W - SIDE) // 2, 0)
+        patches = patches[:, r0:r0 + min(H, SIDE), c0:c0 + min(W, SIDE)]
+
+        # data augmentation: mirrored and rotated copies of every patch
+        patches = np.concatenate([
+            patches,
+            patches[:, :, ::-1],                  # mirrored left-right
+            patches[:, ::-1, :],                  # mirrored top-bottom
+            np.rot90(patches, 2, axes=(1, 2)),    # rotated 180°
+        ])
+
+        y = labels_of(patches)         # (m, 3)  what you are learning to predict
+        X = features_of(patches)       # (m, d)  what you are allowed to look at, d = 672
+
         from sklearn.linear_model import LinearRegression, Ridge
 
-        #  Model 1: Linear Regression  (E_v = 7.6) 
+        # Model 1: Linear Regression  (E_v = 7.6) 
         # self.model = LinearRegression().fit(X, y)
 
         # Model 2: Ridge regression 
-        self.model = Ridge(alpha=1000).fit(X, y)
+        # self.model = Ridge(alpha=1000).fit(X, y)
         # self.model = Ridge(alpha=10000000).fit(X, y)
-        self.patch_side = patches.shape[1]      
+
+        # Model 3: Linear Regression, patch 7 x 7  (I tried also 9x9, 5x5, but 7x7 gave the best results)
+        self.model = LinearRegression().fit(X, y)
+
+        #self.patch_side = patches.shape[1] 
+        self.patch_rows = patches.shape[1]                       # rows the model expects
+        self.patch_cols = patches.shape[2]                       # columns the model expects    
         self.mean_colour = patches.reshape(-1, 3).mean(axis=0)   # the baseline as a fallback
         return self
 
     def _to_train_size(self, patch):
         """Cut or pad ONE patch (H, W, 3) to the training size (P, P, 3). The centre stays centred."""
         H, W, _ = patch.shape
-        P = self.patch_side
+        # P = self.patch_side
+        P, Q = self.patch_rows, self.patch_cols
 
         # mean colour of all pixels EXCEPT the centre: used to fill the padding
         keep = np.ones((H, W), dtype=bool)
-        keep[H // 2, W // 2] = False
+        keep[H // 2, W // 2] = False                        # leave the centre out
         fill = patch[keep].mean(axis=0) if keep.any() else self.mean_colour
 
-        # 1. cut: keep at most P rows and P columns, symmetrically around the centre
+        # 1. cut: keep at most P rows and Q columns, symmetrically around the centre
         r0 = max((H - P) // 2, 0)
-        c0 = max((W - P) // 2, 0)
-        part = patch[r0:r0 + min(H, P), c0:c0 + min(W, P)]
+        c0 = max((W - Q) // 2, 0)
+        part = patch[r0:r0 + min(H, P), c0:c0 + min(W, Q)]
         h, w = part.shape[:2]
 
-        # 2. pad: place that piece in the middle of a P x P canvas filled with `fill`
-        out = np.empty((P, P, 3), dtype=np.float32)
+        # 2. pad: place that piece in the middle of a P x Q canvas filled with `fill`
+        out = np.empty((P, Q, 3), dtype=np.float32)
         out[:] = fill
-        R0, C0 = (P - h) // 2, (P - w) // 2
+        R0, C0 = (P - h) // 2, (Q - w) // 2
         out[R0:R0 + h, C0:C0 + w] = part
         return out
 
@@ -315,8 +339,13 @@ if __name__ == "__main__":
     #   watch the gap while you try things. You are not asked to hand any number in; I
     #   measure your Imputer myself, on my own patches.
     
-    print("\n=== Model: Linear Regression ===")
+    # print("\n=== Model: Linear Regression ===")
     # print("\n=== Model: Ridge regression, alpha=1000 000 ===")
+    # print("\n=== Model: Linear Regression, patch 5 x 5 ===")
+    print("\n=== Model: Linear Regression, patch 7 x 7 ===")
+    # print("\n=== Model: Linear Regression, patch 9 x 9 ===")
+    print("\n=== Model: Linear Regression, with data augmentation, patch 7 x 7 ===")
+
     imputer = Imputer().train(train_patches)
     print(f"training error   E_t = {error_of(imputer, train_patches):8.1f}")
     print(f"validation error E_v = {error_of(imputer, val_patches):8.1f}   "
