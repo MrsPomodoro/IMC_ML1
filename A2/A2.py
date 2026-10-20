@@ -375,7 +375,7 @@ if __name__ == "__main__":
 #
 # 3)One gradient descent step:
 #  η = 0.01.
-#  w(1) = w(0) - η * f'(w(0))
+#  w1 = w0 - η * f'(w0)
 #  w = 1.5 - 0.01 *(-119.23)= 1.5 + 1.1923 = 2.6923 
 
 # The weight went up from 1.5 to 2.6923, because f'(1.5) was negative.
