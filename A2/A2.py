@@ -7,49 +7,6 @@ A2 -- An Imputer class for the centre pixel of a patch
 Concepts: regression, data imputation, two baselines, training error vs validation error, a model behind an interface other people call
 Starts: Session 4 (Fri 09.10, online)   |   Due: Tue 20.10.2026, 23:59
 
-WRITE YOUR PROGRAM IN THIS FILE. You get the full task in A2.pdf. This file is
-the ONLY thing you hand in: attach it to the A2 Aufgabe in Teams as you go
-(one file, no ZIP, Abgeben by the deadline). There is no why-trail.
-
-GETTING PYTHON TO RUN -- once, on your own laptop, about 15 minutes
-  1. Install uv. It installs Python for you and runs your files.
-       Windows, in PowerShell:
-         powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
-       macOS / Linux, in Terminal:
-         curl -LsSf https://astral.sh/uv/install.sh | sh
-     Close and reopen the terminal, then check:      uv --version
-     "command not found" / "not recognized"? That is normal and expected: paste
-     the whole error into the LLM with "I am on Windows/Mac, I just installed uv
-     and I get this, how do I fix it?", try its suggestion once, then ask me.
-  2. Install VS Code (code.visualstudio.com) and its Python extension
-     (left sidebar -> Extensions -> search "Python" -> Install).
-  3. Run this file from its folder:                  uv run A2.py
-     Need a library? One command adds it to the header at the top of this file:
-                                  uv add --script A2.py numpy pillow scikit-learn
-     The first run takes a few seconds: uv downloads Python and the libraries.
-  Stuck for more than 15 minutes? Do not keep fighting it. Open
-  colab.research.google.com in the browser and work there for now; we fix your
-  setup together in the session. Nobody is held up by an install in this course.
-  .py files, not notebooks: a notebook hides the order its cells ran in, and a
-  hidden run order is exactly where data leakage hides.
-
-DATA
-Both data files are downloaded once by the attached script (2-4 min, open data):
-  uv run get_wachau_photo.py
-  wachau_ortho.jpg   the photograph from basemap.at (9216x4608, 0.79 m per pixel,
-                     7.3 x 3.7 km: Weissenkirchen, Rossatz, Duernstein, Loiben)
-  wachau_labels.png  the INVEKOS parcels on the same grid: 0 = no parcel,
-                     1 = vineyard, 2 = other crop
-It is a big picture: 41,472 patches of 32 px. Open it with
-  Image.MAX_IMAGE_PIXELS = None   (Pillow refuses large images by default)
-and compute a few features per patch instead of keeping all 3072 of its raw numbers.
-
-SCORING
-  All 100 points are in this file: it runs and the contract holds (30),
-  how far your imputer gets below the baseline (40, measured on my own
-  patches), and the manual computation at the bottom (30). Using an LLM to
-  write it is expected; code you cannot explain at the five-minute
-  spot-check is worth nothing.
 """
 import sys
 from pathlib import Path
@@ -152,18 +109,7 @@ class Imputer:
         """
         patches = np.asarray(patches, dtype=np.float32)
 
-        # dummy setup self.model = patches.reshape(-1, 3).mean(axis=0)      # one colour: (3,)
-        #
-        # TODO: replace the line above with a model that actually looks at X, for example
-        #           from sklearn.linear_model import LinearRegression
-        #           self.model = LinearRegression().fit(X, y)
-        #           and store anything predict() will need, such as the patch side you trained on:
-        #           self.patch_side = patches.shape[1]
-        # -----------------------------------------------------------------------------------
-
-
         # ---- My solution ----------------------------------------------
-
         # During check I found out that patch 7x7 gives a better validation error than 15x15, so I cut or pad to that size.
         SIDE = 7
         H, W = patches.shape[1], patches.shape[2]
@@ -248,16 +194,9 @@ class Imputer:
             return -1                                      # nobody has called train() yet
 
         # ---- My solution ----------------------------------------------
-
         # baseline:         return self.model         # It answers the same colour for every patch, without looking at a single pixel of it.
-
-        # TODO: look at the pixels instead. features_of() expects a STACK of patches, so one
-        #       patch becomes patch[None] of shape (1, H, W, 3), and its feature row is
-        #           features_of(patch[None].astype(np.float32))[0]
-        #       Remember that `patch` may be bigger or smaller than what you trained on.
-        # -----------------------------------------------------------------------------------
-        p = self._to_train_size(patch.astype(np.float32))  # (15, 15, 3), centre still in the middle
-        x = features_of(p[None])                            # (1, 672): neighbours as one row
+        p = self._to_train_size(patch.astype(np.float32))  # (7, 7, 3), centre still in the middle
+        x = features_of(p[None])                            # (1, 144): neighbours as one row
         guess = self.model.predict(x)[0]                  # (3,): R, G, B of the centre pixel
         return np.clip(guess, 0, 255)                      # colors are from 0 to 255
 
@@ -383,10 +322,80 @@ if __name__ == "__main__":
 # ----------------------------------------------------------------------------------------------
 # YOUR ANSWER AND YOUR WORKING, from here down:
 #
-# 1)
+# 1) prediction errors:
+# models predicts the max as w * x (prediction model) 
+# for each day I took the error  y - w * x (maximum - predicted maximum) and square that error
+# the training error is the avarage of squared errors over all 3 days  so:
+# f(w) = (1/3) * [ (y1 - w*x1)² + (y2 - w*x2)² + (y3 - w*x3)² ]
+# and  I used  w = 1.5 and prepared a table for each day - better readability 
+
+#    day |  x  |  y   | w*x  | y - w * x| (y - w * x)²
+#    -------------------------------------------------------
+#     1  | 4.2 | 11.9 |  6.3 |   5.6    |   31.36
+#     2  | 9.4 | 23.9 | 14.1 |   9.8    |   96.04
+#     3  | 8.0 | 19.9 | 12.0 |   7.9    |   62.41
+#     ------------------------------------------------
+#                                 SUM  |  189.81
+
+# What I did : 
+#- I miltiplied w by x to get the prediction  1.5 * x
+#- I substracted the prediction to get the  error y - w * x 
+#- Then used square calculation to get the squared error for each day
+#- Summed them and clalculated avarage > 31.36+ 96.01+62.41 = 189.81 / 3 = 63.27
+# My results: The  3 prediction errors are 5.6, 9.8, 7.9 , all are positive, so the model underestimates the maximums.
+#  f(1.5)= (31.36 + 96.04 + 62.41) / 3 = 189.81 /3 = 63.27  so the avarage squared error loss is 63.27
+#  and model is wrong  about sqrt(63.27) = 7.95 °C on average
+
+# 2) derivative of f':
+# f(x) = (1/3) * [ (y1 - w*x1)² + (y2 - w*x2)² + (y3 - w*x3)² ]
+
+# I took the derivates of one day term (y-w* x)²  with the chain rule
+#.   outer part of the expression: (something)² -> 2 * (something) = 2 * (y - w*x)
+#    inner part of the expression: derivative of (y - w*x) with respect to w = -x 
+#.   then I multiplied these 2 parts and got:
+# f'(w) =2 * (y - w*x) * (-x) = -2 * x * (y - w*x) and put it to the formula for all 3 days:
+# f'(w) = (1/3) * [ -2*x1*(y1 - w*x1) - 2*x2*(y2 - w*x2) - 2*x3*(y3 - w*x3) ]
+#       = -(2/3) * [ x1*(y1 - w*x1) + x2*(y2 - w*x2) + x3*(y3 - w*x3) ]
+# 
+# and extended my table: 
+#    day |  x  |  y   | w*x  | y - w * x| (y - w * x)²  | x * (y - w * x)
+#    -----------------------------------------------------------------------
+#     1  | 4.2 | 11.9 |  6.3 |   5.6    |   31.36       |   23.52
+#     2  | 9.4 | 23.9 | 14.1 |   9.8    |   96.04       |   92.12
+#     3  | 8.0 | 19.9 | 12.0 |   7.9    |   62.41       |   63.20    
+#     ----------------------------------------------------------------------
+#                                 SUM   |  189.81        |  178.84
 #
-# 2)
 #
-# 3)
+# What I did :
+# - I summed the three products of derivation:  23.52 + 92.12 + 63.20 = 178.84
+# - I multiplied the sum by -2/3:  -(2/3) * 178.84 =  -119.23
+# - My result: f'(1.5) = -119.23
+# The derivative is negative, so the training error goes DOWN when w becomes bigger.
 #
+# 3)One gradient descent step:
+#  η = 0.01.
+#  w(1) = w(0) - η * f'(w(0))
+#  w = 1.5 - 0.01 *(-119.23)= 1.5 + 1.1923 = 2.6923 
+
+# The weight went up from 1.5 to 2.6923, because f'(1.5) was negative.
+#
+# Then I computed the training error again with the new weight w = 2.6923:
+#
+#    day |  x  |  y   |  w*x                | y - w * x                   | (y - w * x)²
+#    -----------------------------------------------------------------------------------------------
+#     1  | 4.2 | 11.9 | 4.2*2.6923= 11.30766 | 11.9  - 11.30766 = 0.59234 |    0.59234 ² = 0.35
+#     2  | 9.4 | 23.9 | 9.4*2.6923= 25.30766 | 23.9 - 25.30766 = -1.40766 |    (-1.40762)² = 1.98
+#     3  | 8.0 | 19.9 | 8.0*2.6923= 21.5384  | 19.9 - 21.5384 = -1.6384   |    (-1.6384)² = 2.68
+#    ---------------------------------------------------------------------------------------------------
+#                                                                    SUM  |    = 0.35 + 1.98 + 2.68 = 5.01
+#
+# f(2.6923) = 5.01/ 3 = 1.67
+# # What I did :
+# I used the gradient descent formula from the task:  w(1) = w(0) - η * f'(w(0))
+# Then I calculated the new weight:  w(1) = 1.5 - 0.01 * (-119.23) = 2.6923
+# Tthe training error go down  from 63.27 - to 1.67
+# It went down because the step went against the slope (f'(1.5) < 0, so w went up)
+# all three errors are much smaller than before (5.6, 9.8, 7.9)
+
 # ==============================================================================================
