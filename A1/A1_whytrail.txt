@@ -209,7 +209,12 @@ check_2: check if both H and W are divisible without a remainder
 How: 4,608 mod 32 = 0 and 9,216 mod 32 = 0. 
 Result: both remainders are 0, lost pixels = 0, so OK. 
 
-The image splits into whole patches, nothing is cut off at the edges.
+CHECKS I DID FOR TASK 3:
+Mean share check (my idea, LLM only wrote the code): all patches have the
+same size and no pixel got lost, so the average vine_share over all
+patches must equal the vineyard share over all pixels.
+Result: first 1.7 % vs 20.5 % -> NOT OK, this found the wrong variable
+(see section 2). After the fix 20.5 % = 20.5 % -> OK.
 
 
 CHECKS BASED ON LLM ADVICES WHAT TO CHECK:
@@ -222,6 +227,15 @@ Result: min = 1, max = 1, so OK. Every pixel is in exactly one patch, the
 patches do not overlap and there are no gaps.
 Note: this check only shows no overlap
 
+Square check: check if every patch is a real 32 x 32 square
+How: for 3 patches, (0, 0) top left, (72, 96) middle and (143, 287) bottom
+right, I cut the 32 x 32 square directly from the photo and the mask and
+compared it with its row in patches and lab_patches from the reshape.
+Result: all 3 -> OK.
+Why it matters: without the transpose a "patch" would be a 1 x 1024 strip
+of one image row. check_1, check_2, the overlap check and the shape checks
+would all still pass, because a strip has the same number of pixels.
+Only this check sees the difference. It is adviced by LLM.
 
 Leakage risks I checked now: features are built only from the photo
 (X_b comes from patches = photo), never from the mask. No feature is
@@ -250,6 +264,26 @@ My check confirmed that the share goes down: 24.62 % > 21.44 % > 17.07 % -> OK.
 In every line share + baseline = 100 %, and every baseline is above 50 %. 
 At > 50 % the patch share (21.44 %) is close to the pixel share (20.48 %).
 
+MY DECISIONS
+(i) Data point: patch, P = 32. A patch shows more than one colour,
+it also shows the pattern of the vine rows.
+
+(ii) Label: a patch is vineyard if more than 50 % of its pixels are
+vineyard. I chose 50 % because it is a simple "more than half" rule,
+and the patch share (21.44 %) is close to the pixel share (20.48 %).
+
+(iii) Value 0 as not vineyard: forest, roads, houses and empty fields
+all go into one big mixed group "not vineyard".
+
+(iv) Whole image: m = 1, so there is only one example. I cannot
+train and test a model on one example.
+
+(v) m = 41,472   d = 6   vineyard share = 21.44 %
+    baseline accuracy = 78.56 % (always say "not vineyard")
+
+STILL UNCERTAIN
+Some fields with value 0 may be real vineyards that nobody declared.
+  Then their label is wrong.
 
 5. HAND COMPUTATION
 
