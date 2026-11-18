@@ -218,8 +218,6 @@ for name, model, file_name in model_list_task1:
     (RESULTS / f"{file_name}.txt").write_text(header + "\n" + base + "\n" + row + "\n")
 
 
-
-#
 #   task 2 (a list model_list_task2), on F_train / c_train, measured on F_val / c_val:
 #     make_pipeline(StandardScaler(), LogisticRegression(C=0.01, max_iter=1000))
 #     KNeighborsClassifier(n_neighbors=1)
@@ -227,7 +225,38 @@ for name, model, file_name in model_list_task1:
 #     KNeighborsClassifier(n_neighbors=50)
 #     RandomForestClassifier(n_estimators=50, n_jobs=-1, random_state=0)
 #     HistGradientBoostingClassifier(max_iter=50, random_state=0)
-#
+
+model_list_task2 = [
+    # logistic regression = a linear classifier; scaled first, C=0.01 = strong penalty
+    ("Logistic regression (C=0.01)",
+     make_pipeline(StandardScaler(), LogisticRegression(C=0.01, max_iter=1000)), "LogReg_C001"),
+  
+]
+
+RESULTS2 = HERE / "results" / "task2"
+RESULTS2.mkdir(parents=True, exist_ok=True)
+
+header2 = f"  {'model':<32}{'acc train':>11}{'acc val':>11}{'fit s':>8}"
+base2 = (f"  {'baseline: always not vineyard':<32}"
+         f"{accuracy(c_train, majority):>11.1%}{accuracy(c_val, majority):>11.1%}{'-':>8}")
+print("\nTASK 2 -- classification, accuracy (higher is better)")
+print(header2)
+print(base2)
+
+for name, model, file_name in model_list_task2:
+    t0 = time.time()
+    model.fit(F_train, c_train)                         # LEARN: only on the training set
+    seconds = time.time() - t0
+    a_t = accuracy(c_train, model.predict(F_train))     # training accuracy
+    a_v = accuracy(c_val, model.predict(F_val))         # validation accuracy
+    row = f"  {name:<32}{a_t:>11.1%}{a_v:>11.1%}{seconds:>8.1f}"
+    print(row, flush=True)
+    (RESULTS2 / f"{file_name}.txt").write_text(header2 + "\n" + base2 + "\n" + row + "\n")
+
+
+
+
+
 # One table per task, the baseline's numbers next to them. Every fit takes seconds; k nearest
 # neighbours has no training at all, its cost is at prediction time (5,000 validation patches
 # against 20,000 training patches), a second or two. If a row runs for minutes, something is
