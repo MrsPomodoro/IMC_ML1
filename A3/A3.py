@@ -184,6 +184,9 @@ model_list_task1 = [
     ("kNN, k=1", KNeighborsRegressor(n_neighbors=1), "KNN_k1"),
     #   KNeighborsRegressor(n_neighbors=5)
     ("kNN, k=5", KNeighborsRegressor(n_neighbors=5), "KNN_k5"),
+    #   KNeighborsRegressor(n_neighbors=50)
+    ("kNN, k=50", KNeighborsRegressor(n_neighbors=50), "KNN_k50")
+
 
 ]
 
