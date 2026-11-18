@@ -1,0 +1,3 @@
+  model                             acc train    acc val   fit s
+  baseline: always not vineyard         76.9%      83.5%       -
+  kNN, k=50                             91.1%      91.2%     0.0

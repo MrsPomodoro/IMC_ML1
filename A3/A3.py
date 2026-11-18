@@ -200,7 +200,7 @@ header = f"  {'model':<32}{'MSE train':>11}{'MSE val':>11}{'fit s':>8}"
 base = (f"  {'baseline: mean of 8 neighbours':<32}"
         f"{mse(y_train, neighbour_mean(train_patches)):>11.1f}"
         f"{mse(y_val, neighbour_mean(val_patches)):>11.1f}{'-':>8}")
-print("\nTASK 1 -- regression, MSE (lower is better)")
+print("\nTASK 1: regression, MSE (lower is better)")
 print(header)
 print(base)
 
@@ -219,10 +219,6 @@ for name, model, file_name in model_list_task1:
 
 
 #   task 2 (a list model_list_task2), on F_train / c_train, measured on F_val / c_val:
-#     make_pipeline(StandardScaler(), LogisticRegression(C=0.01, max_iter=1000))
-#     KNeighborsClassifier(n_neighbors=1)
-#     KNeighborsClassifier(n_neighbors=5)
-#     KNeighborsClassifier(n_neighbors=50)
 #     RandomForestClassifier(n_estimators=50, n_jobs=-1, random_state=0)
 #     HistGradientBoostingClassifier(max_iter=50, random_state=0)
 
@@ -230,6 +226,14 @@ model_list_task2 = [
     # logistic regression = a linear classifier; scaled first, C=0.01 = strong penalty
     ("Logistic regression (C=0.01)",
      make_pipeline(StandardScaler(), LogisticRegression(C=0.01, max_iter=1000)), "LogReg_C001"),
+    # kNN: the k most similar training patches vote, the majority class wins
+    ("kNN, k=1",  KNeighborsClassifier(n_neighbors=1),  "KNN_k1"),
+    ("kNN, k=5",  KNeighborsClassifier(n_neighbors=5),  "KNN_k5"),
+    ("kNN, k=50", KNeighborsClassifier(n_neighbors=50), "KNN_k50"),
+     # random forest: 50 trees, each votes, the majority wins
+    ("Random forest (50 trees)",
+     RandomForestClassifier(n_estimators=50, n_jobs=-1, random_state=0), "RandomForest_50"),
+   
   
 ]
 
@@ -239,7 +243,7 @@ RESULTS2.mkdir(parents=True, exist_ok=True)
 header2 = f"  {'model':<32}{'acc train':>11}{'acc val':>11}{'fit s':>8}"
 base2 = (f"  {'baseline: always not vineyard':<32}"
          f"{accuracy(c_train, majority):>11.1%}{accuracy(c_val, majority):>11.1%}{'-':>8}")
-print("\nTASK 2 -- classification, accuracy (higher is better)")
+print("\nTASK 2: classification, accuracy (higher is better)")
 print(header2)
 print(base2)
 
