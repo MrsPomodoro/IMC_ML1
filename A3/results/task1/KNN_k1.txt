@@ -1,0 +1,3 @@
+  model                             MSE train    MSE val   fit s
+  baseline: mean of 8 neighbours         38.9       41.0       -
+  kNN, k=1                                0.0      163.6     0.0

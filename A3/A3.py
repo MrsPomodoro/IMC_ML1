@@ -177,10 +177,13 @@ print(f"  always '{'vineyard' if majority else 'not vineyard'}':  accuracy train
 #
 #   task 1 (a list model_list_task1), on X_train / y_train, measured on X_val / y_val:
 
-# Ridge(alpha=10.0)
+
 
 model_list_task1 = [
+    #   Ridge(alpha=10.0)
     ("Ridge(alpha=10)", Ridge(alpha=10.0), "RidgeWithAlpha10"),
+    #   KNeighborsRegressor(n_neighbors=1)        
+    ("kNN, k=1", KNeighborsRegressor(n_neighbors=1), "KNN_k1"),
 ]
 
 RESULTS = HERE / "results" / "task1"
@@ -194,7 +197,6 @@ print("\nTASK 1 -- regression, MSE (lower is better)")
 print(header)
 print(base)
 
-#     KNeighborsRegressor(n_neighbors=1)
 #     KNeighborsRegressor(n_neighbors=5)
 #     KNeighborsRegressor(n_neighbors=50)
 #     RandomForestRegressor(n_estimators=30, max_depth=8, max_features=0.1, n_jobs=-1, random_state=0)
