@@ -251,6 +251,14 @@ print("\nTASK 2: classification, accuracy (higher is better)")
 print(header2)
 print(base2)
 
+
+# One table per task, the baseline's numbers next to them. Every fit takes seconds; k nearest
+# neighbours has no training at all, its cost is at prediction time (5,000 validation patches
+# against 20,000 training patches), a second or two. If a row runs for minutes, something is
+# wrong: lower M_TRAIN and say so in a comment.
+
+
+
 for name, model, file_name in model_list_task2:
     t0 = time.time()
     model.fit(F_train, c_train)                         # LEARN: only on the training set
@@ -265,12 +273,7 @@ for name, model, file_name in model_list_task2:
 
 
 
-# One table per task, the baseline's numbers next to them. Every fit takes seconds; k nearest
-# neighbours has no training at all, its cost is at prediction time (5,000 validation patches
-# against 20,000 training patches), a second or two. If a row runs for minutes, something is
-# wrong: lower M_TRAIN and say so in a comment.
 
-# TODO: your program from here
 
 
 # ============================================================================================
@@ -293,6 +296,66 @@ for name, model, file_name in model_list_task2:
 #    than the constant prediction, and what does each kind of mistake cost them?
 # --------------------------------------------------------------------------------------------
 # YOUR ANSWER AND YOUR WORKING, from here down:
+##
+# 0) What I know from the task:
+#   - N = 100 data points of the validation set
+#   - the model predicted "vineyard" 22 times
+#   - 14 of those 22 really were vineyard  -> these are the true positives
+#   - there were 38 vineyards in total     -> so 100 - 38 = 62 were not vineyard
 #
+# 1) Confusion matrix:
+# First I drew an empty 2x2 table: rows = true label, columns = prediction.
+# I put the totals I know on the edges (22 predicted vineyard, 38 true vineyard, 100 all).
+#
+#                        | pred. vineyard | pred. not vineyard | total
+#    -------------------------------------------------------------------
+#    true vineyard       |      TP        |        FN          |  38
+#    true not vineyard   |      FP        |        TN          |  62
+#    -------------------------------------------------------------------
+#    total               |      22        |        78          | 100
+#
+# What I did:
+# - TP is given in the task: TP = 14
+# - FP = predicted vineyard but was not: I subtracted TP from all "vineyard" predictions
+#   FP = 22 - 14 = 8
+# - FN = was vineyard but predicted not: I subtracted TP from all true vineyards
+#   FN = 38 - 14 = 24
+# - TN = the rest: I subtracted the other three cells from 100
+#   TN = 100 - 14 - 8 - 24 = 54
+# - I checked that the four cells add up to 100: 14 + 8 + 24 + 54 = 100  OK
+#
+# My result:
+#                        | pred. vineyard | pred. not vineyard | total
+#    -------------------------------------------------------------------
+#    true vineyard       |    TP = 14     |      FN = 24       |  38
+#    true not vineyard   |    FP =  8     |      TN = 54       |  62
+#    -------------------------------------------------------------------
+#    total               |      22        |        78          | 100
+#
+# 2) Accuracy, precision, recall:
+# What I did:
+# - accuracy = share of all points labelled right (both correct cells):
+#   accuracy = (TP + TN) / N = (14 + 54) / 100 = 68 / 100 = 0.68  -> 68 %
+# - precision = when the model says "vineyard", how often it is right (divide by the column):
+#   precision = TP / (TP + FP) = 14 / (14 + 8) = 14 / 22 = 0.636  -> 63.6 %
+# - recall = how many of the real vineyards the model found (divide by the row):
+#   recall = TP / (TP + FN) = 14 / (14 + 24) = 14 / 38 = 0.368  -> 36.8 %
+# My results: accuracy 68 %, precision 63.6 %, recall 36.8 %.
+# The recall is low: the model misses almost two thirds of the vineyards (24 of 38).
+#
+# 3) Constant prediction "not vineyard":
+# What I did:
+# - a model that always says "not vineyard" is right exactly on the true non-vineyards
+# - I divided the true non-vineyards by all points: accuracy = 62 / 100 = 0.62 -> 62 %
+# - its recall is 0 / 38 = 0 %: it never finds a single vineyard
+# My result: the constant prediction has accuracy 62 %, only 6 points below the model (68 %).
+# This is what accuracy does not show: the constant looks almost as good,
+# but it is useless for finding vineyards.
+
+# 4) One sentence to the agency paying the subsidies:
+# "The model is right a bit more often than simply saying 'no vineyard' every time
+#  (68 % vs 62 %), but it makes two kinds of mistakes: 8 times it calls a field a vineyard
+#  when it is not, so you would pay a subsidy you should not, and 24 times it misses a real
+#  vineyard, so a farmer who deserves the money would not get it unless someone checks by hand."
 #
 # ============================================================================================
