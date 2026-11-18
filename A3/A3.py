@@ -110,8 +110,8 @@ val_patches = patches_at(photo, east).astype(np.float32)       # (M_VAL, 15, 15,
 # In reading order the centre sits at position 7 * 15 + 7 = 112; np.delete takes it out, so
 # that the label is never among the features -- a model that sees it just copies it.
 centre = C * PATCH + C
-y_train, y_val = train_patches[:, C, C, :], val_patches[:, C, C, :]
-X_train = np.delete(train_patches.reshape(M_TRAIN, PATCH * PATCH, 3), centre, axis=1).reshape(M_TRAIN, -1)
+y_train, y_val = train_patches[:, C, C, :], val_patches[:, C, C, :]         # train_patches has a shape (20000, 15, 15, 3): [:, C, C, :] = all patches,
+X_train = np.delete(train_patches.reshape(M_TRAIN, PATCH * PATCH, 3), centre, axis=1).reshape(M_TRAIN, -1)  #delete the centre pixel from the feature - 112 pixel 
 X_val = np.delete(val_patches.reshape(M_VAL, PATCH * PATCH, 3), centre, axis=1).reshape(M_VAL, -1)
 
 # ---- task 2, classification: vineyard or not ----------------------------------------------
@@ -176,11 +176,43 @@ print(f"  always '{'vineyard' if majority else 'not vineyard'}':  accuracy train
 # Every one is a class of scikit-learn, already imported at the top of this file.
 #
 #   task 1 (a list model_list_task1), on X_train / y_train, measured on X_val / y_val:
-#     Ridge(alpha=10.0)
+
+# Ridge(alpha=10.0)
+
+model_list_task1 = [
+    ("Ridge(alpha=10)", Ridge(alpha=10.0), "RidgeWithAlpha10"),
+]
+
+RESULTS = HERE / "results" / "task1"
+RESULTS.mkdir(parents=True, exist_ok=True)          # creates results/task1/ if it is missing
+
+header = f"  {'model':<32}{'MSE train':>11}{'MSE val':>11}{'fit s':>8}"
+base = (f"  {'baseline: mean of 8 neighbours':<32}"
+        f"{mse(y_train, neighbour_mean(train_patches)):>11.1f}"
+        f"{mse(y_val, neighbour_mean(val_patches)):>11.1f}{'-':>8}")
+print("\nTASK 1 -- regression, MSE (lower is better)")
+print(header)
+print(base)
+
 #     KNeighborsRegressor(n_neighbors=1)
 #     KNeighborsRegressor(n_neighbors=5)
 #     KNeighborsRegressor(n_neighbors=50)
 #     RandomForestRegressor(n_estimators=30, max_depth=8, max_features=0.1, n_jobs=-1, random_state=0)
+
+
+for name, model, file_name in model_list_task1:
+    t0 = time.time()                               # start the stopwatch
+    model.fit(X_train, y_train)                    # LEARN: only on the training set
+    seconds = time.time() - t0                     # fit time in seconds
+    e_t = mse(y_train, model.predict(X_train))     # training error
+    e_v = mse(y_val, model.predict(X_val))         # validation error (unseen eastern patches)
+    row = f"  {name:<32}{e_t:>11.1f}{e_v:>11.1f}{seconds:>8.1f}"
+    print(row, flush=True)
+    # save this model's result as a text file: results/task1/<file_name>.txt
+    (RESULTS / f"{file_name}.txt").write_text(header + "\n" + base + "\n" + row + "\n")
+
+
+
 #
 #   task 2 (a list model_list_task2), on F_train / c_train, measured on F_val / c_val:
 #     make_pipeline(StandardScaler(), LogisticRegression(C=0.01, max_iter=1000))
