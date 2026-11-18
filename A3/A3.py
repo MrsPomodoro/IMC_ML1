@@ -185,7 +185,10 @@ model_list_task1 = [
     #   KNeighborsRegressor(n_neighbors=5)
     ("kNN, k=5", KNeighborsRegressor(n_neighbors=5), "KNN_k5"),
     #   KNeighborsRegressor(n_neighbors=50)
-    ("kNN, k=50", KNeighborsRegressor(n_neighbors=50), "KNN_k50")
+    ("kNN, k=50", KNeighborsRegressor(n_neighbors=50), "KNN_k50"),
+    #    RandomForestRegressor(n_estimators=30, max_depth=8, max_features=0.1, n_jobs=-1, random_state=0)
+    ("Random forest (30 trees, depth 8)",  RandomForestRegressor(n_estimators=30, max_depth=8, max_features=0.1, n_jobs=-1, random_state=0),  "RandomForest_30_d8"),
+
 
 
 ]
@@ -201,8 +204,6 @@ print("\nTASK 1 -- regression, MSE (lower is better)")
 print(header)
 print(base)
 
-#     KNeighborsRegressor(n_neighbors=50)
-#     RandomForestRegressor(n_estimators=30, max_depth=8, max_features=0.1, n_jobs=-1, random_state=0)
 
 
 for name, model, file_name in model_list_task1:
