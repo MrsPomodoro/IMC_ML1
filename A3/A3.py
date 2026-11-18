@@ -233,6 +233,10 @@ model_list_task2 = [
      # random forest: 50 trees, each votes, the majority wins
     ("Random forest (50 trees)",
      RandomForestClassifier(n_estimators=50, n_jobs=-1, random_state=0), "RandomForest_50"),
+     # gradient boosting: 50 trees built one after another, each corrects the errors before it
+    ("Gradient boosting (50 iter)",
+     HistGradientBoostingClassifier(max_iter=50, random_state=0), "HistGB_50"),
+
    
   
 ]
