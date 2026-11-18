@@ -1,0 +1,34 @@
+Mirrored copies of each patch
+
+What I did
+
+In train(), I add 3 copies of every patch: mirrored left-right, mirrored top-bottom, and rotated 180°.
+5,000 patches become 20,000.  
+It runs after cutting to 7×7 and before labels_of() / features_of(), so labels and features stay matched.
+It is inside train(), so it also works when the grader imports my file. It is never used in predict() or on validation data.
+
+Why
+
+More data for free: m grows 4×, so d/m gets 4× smaller. 
+
+
+The centre stays the centre: with an odd size, the centre pixel does not move, so the label does not change. 
+
+Only the neighbours swap sides.
+The model should not learn a side bias, like “the left neighbour matters more”. The copies teach it that direction does not matter.
+
+What it changed (same patches, 20,000 for training)
+
+window	weights d	augmentation	E_t	E_v
+7×7	144	no	7.7	7.3
+7×7	144	yes	7.8	7.3
+15×15	672	no	7.3	7.6
+15×15	672	yes	7.7	7.4
+7×7: almost no change. The model was not overfitting (enough data for 144 weights), so there was nothing to fix.
+15×15: E_v went down (7.6 → 7.4). Without augmentation E_t < E_v, a sign of overfitting. With augmentation E_t went up and E_v went down, the typical effect of regularization.
+
+Conclusion
+
+Augmentation helps when the model overfits: big window, many weights, little data.
+A smaller window does a similar job, so in my final 7×7 model the effect was small.
+Both are regularization: a smaller window lowers d, augmentation raises m.
